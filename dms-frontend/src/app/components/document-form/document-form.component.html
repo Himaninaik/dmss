@@ -1,0 +1,58 @@
+<div class="container" style="max-width: 500px; margin: 20px auto;">
+  <h2 *ngIf="isEditMode">Update File</h2>
+  
+  <form [formGroup]="documentForm" (ngSubmit)="onSubmit()">
+    
+    <!-- Title (readonly, just for info) -->
+    <div class="form-group mb-3">
+      <label for="title">Title</label>
+      <input
+        type="text"
+        id="title"
+        class="form-control"
+        formControlName="title"
+        readonly
+      />
+    </div>
+
+    <!-- File Selection -->
+    <div class="form-group mb-3">
+      <label for="file">Choose new file to upload</label>
+      <input
+        type="file"
+        id="file"
+        class="form-control"
+        (change)="onFileSelected($event)"
+      />
+    </div>
+
+    <!-- File Info -->
+    <div *ngIf="selectedFile" class="mb-3">
+      <p><strong>Selected file:</strong> {{ selectedFile.name }}</p>
+      <p><strong>Size:</strong> {{ selectedFile.size | number }} bytes</p>
+    </div>
+
+    <!-- Upload Progress -->
+    <div *ngIf="uploadProgress > 0" class="mb-3">
+      <label>Upload Progress:</label>
+      <div class="progress">
+        <div
+          class="progress-bar"
+          role="progressbar"
+          [style.width.%]="uploadProgress"
+        >
+          {{ uploadProgress }}%
+        </div>
+      </div>
+    </div>
+
+    <!-- Submit button -->
+    <button
+      type="submit"
+      class="btn btn-primary"
+      [disabled]="loading || !selectedFile"
+    >
+      {{ loading ? 'Uploading...' : 'Update File' }}
+    </button>
+  </form>
+</div>

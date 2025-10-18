@@ -1,0 +1,40 @@
+<div class="container mt-4">
+  <h2>Documents</h2>
+
+  <div *ngIf="loading" class="text-center my-3">
+    <p>Loading documents...</p>
+  </div>
+
+  <table class="table table-bordered table-hover" *ngIf="!loading && documents.length > 0">
+    <thead class="table-light">
+      <tr>
+        <th>Title</th>
+        <th>Description</th>
+        <th>File Name</th>
+        <th>File Size</th>
+        <th>Uploaded By</th>
+        <th>Upload Date</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let doc of documents">
+        <td>{{ doc.title }}</td>
+        <td>{{ doc.description }}</td>
+        <td>{{ doc.fileName }}</td>
+        <td>{{ doc.fileSize | number }} bytes</td>
+        <td>{{ doc.uploadedBy }}</td>
+        <td>{{ doc.uploadDate | date: 'short' }}</td>
+        <td>
+          <a [routerLink]="['/documents/edit', doc.id]" class="btn btn-sm btn-primary me-1">Edit</a>
+          <button (click)="deleteDocument(doc.id!)" class="btn btn-sm btn-danger me-1">Delete</button>
+          <button (click)="downloadFile(doc)" class="btn btn-sm btn-success">Download</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div *ngIf="!loading && documents.length === 0" class="text-center my-3">
+    <p>No documents found.</p>
+  </div>
+</div>

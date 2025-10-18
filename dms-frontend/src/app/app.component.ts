@@ -1,0 +1,15 @@
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+
+@Component({
+  selector: 'app-root',
+  template: `<router-outlet></router-outlet>`,
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css'], // can be empty
+  standalone: true,
+  imports: [CommonModule, RouterModule]
+})
+export class AppComponent {
+  title = 'dms-frontend';
+}
