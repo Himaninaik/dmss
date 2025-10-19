@@ -51,14 +51,28 @@ public class FileController {
             @RequestParam("totalChunks") int totalChunks,
             @RequestParam("fileName") String fileName) {
         
-        String result = fileStorageService.storeFileChunk(chunk, chunkId, chunkNumber, totalChunks, fileName);
-        
-        Map<String, String> response = new HashMap<>();
-        response.put("message", result);
-        response.put("chunkNumber", String.valueOf(chunkNumber));
-        response.put("totalChunks", String.valueOf(totalChunks));
-        
-        return ResponseEntity.ok(response);
+        try {
+            String result = fileStorageService.storeFileChunk(chunk, chunkId, chunkNumber, totalChunks, fileName);
+            
+            Map<String, String> response = new HashMap<>();
+            response.put("message", result);
+            response.put("chunkNumber", String.valueOf(chunkNumber));
+            response.put("totalChunks", String.valueOf(totalChunks));
+            
+            // If this was the last chunk, include the merged filename
+            if (chunkNumber == totalChunks - 1) {
+                response.put("mergedFileName", result);
+            }
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception ex) {
+            System.err.println("Error uploading chunk: " + ex.getMessage());
+            ex.printStackTrace();
+            
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Failed to upload chunk: " + ex.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
     }
 
     /**
@@ -96,29 +110,35 @@ public class FileController {
             @PathVariable String fileName,
             @RequestHeader(value = "Range", required = false) String rangeHeader) {
         
-        long fileSize = fileStorageService.getFileSize(fileName);
-        
-        long start = 0;
-        long end = fileSize - 1;
-        
-        if (rangeHeader != null && rangeHeader.startsWith("bytes=")) {
-            String[] ranges = rangeHeader.substring(6).split("-");
-            start = Long.parseLong(ranges[0]);
-            if (ranges.length > 1 && !ranges[1].isEmpty()) {
-                end = Long.parseLong(ranges[1]);
+        try {
+            long fileSize = fileStorageService.getFileSize(fileName);
+            
+            long start = 0;
+            long end = fileSize - 1;
+            
+            if (rangeHeader != null && rangeHeader.startsWith("bytes=")) {
+                String[] ranges = rangeHeader.substring(6).split("-");
+                start = Long.parseLong(ranges[0]);
+                if (ranges.length > 1 && !ranges[1].isEmpty()) {
+                    end = Long.parseLong(ranges[1]);
+                }
             }
+            
+            byte[] data = fileStorageService.downloadFileChunk(fileName, start, end);
+            
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+            headers.set(HttpHeaders.CONTENT_RANGE, "bytes " + start + "-" + end + "/" + fileSize);
+            headers.setContentLength(data.length);
+            headers.set(HttpHeaders.ACCEPT_RANGES, "bytes");
+            
+            return new ResponseEntity<>(data, headers, 
+                    rangeHeader != null ? HttpStatus.PARTIAL_CONTENT : HttpStatus.OK);
+        } catch (Exception ex) {
+            System.err.println("Error downloading file chunk: " + ex.getMessage());
+            ex.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
-        
-        byte[] data = fileStorageService.downloadFileChunk(fileName, start, end);
-        
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        headers.set(HttpHeaders.CONTENT_RANGE, "bytes " + start + "-" + end + "/" + fileSize);
-        headers.setContentLength(data.length);
-        headers.set(HttpHeaders.ACCEPT_RANGES, "bytes");
-        
-        return new ResponseEntity<>(data, headers, 
-                rangeHeader != null ? HttpStatus.PARTIAL_CONTENT : HttpStatus.OK);
     }
 
     /**
@@ -157,6 +177,35 @@ public class FileController {
         info.put("exists", true);
         
         return ResponseEntity.ok(info);
+    }
+
+    /**
+     * Finalize upload after all chunks are uploaded
+     */
+    @PostMapping("/finalize-upload/{chunkId}/{metadataId}")
+    public ResponseEntity<Map<String, String>> finalizeUpload(
+            @PathVariable String chunkId,
+            @PathVariable Long metadataId) {
+        
+        Map<String, String> response = new HashMap<>();
+        try {
+            System.out.println("Finalizing upload for chunkId: " + chunkId + ", metadataId: " + metadataId);
+            
+            // Update the metadata with the new file information
+            String result = fileStorageService.finalizeUpload(chunkId, metadataId);
+            
+            response.put("message", "Upload finalized successfully");
+            response.put("chunkId", chunkId);
+            response.put("metadataId", String.valueOf(metadataId));
+            response.put("result", result);
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception ex) {
+            System.err.println("Error finalizing upload: " + ex.getMessage());
+            ex.printStackTrace();
+            response.put("error", "Failed to finalize upload: " + ex.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
     }
 
     /**

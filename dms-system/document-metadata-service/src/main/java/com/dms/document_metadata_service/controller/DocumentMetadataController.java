@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/metadata")
+@CrossOrigin(origins = "*")
 public class DocumentMetadataController {
 
     private final DocumentMetadataService service;

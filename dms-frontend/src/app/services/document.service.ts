@@ -98,8 +98,8 @@ export interface DocumentMetadata {
   providedIn: 'root'
 })
 export class DocumentService {
-  // Use your actual backend URL
-  private readonly BASE_URL = 'http://localhost:8080';
+  // Use proxy configuration for development
+  private readonly BASE_URL = '';
 
   constructor(private http: HttpClient) {}
 

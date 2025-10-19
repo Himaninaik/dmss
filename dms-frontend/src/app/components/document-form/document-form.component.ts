@@ -455,10 +455,10 @@ export class DocumentFormComponent implements OnInit {
             }
           },
           error: (err: any) => {
-          console.error(`Error uploading chunk ${chunkNumber + 1}:`, err);
-          alert(`Failed to upload chunk ${chunkNumber + 1}. Please try again.`);
-          this.loading = false;
-        },
+            console.error(`Error uploading chunk ${chunkNumber + 1}:`, err);
+            alert(`Failed to upload chunk ${chunkNumber + 1}. Please try again.`);
+            this.loading = false;
+          },
           complete: () => {
             chunkNumber++;
             if (chunkNumber < totalChunks) {
@@ -475,12 +475,11 @@ export class DocumentFormComponent implements OnInit {
                   this.loading = false;
                 },
                 complete: () => {
-                this.loading = false;
+                  this.loading = false;
                 }
               });
             }
-          },
-          
+          }
         });
     };
 
